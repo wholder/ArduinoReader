@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="ArduinoReader:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/ArduinoReader_jar</output-path>
+    <root id="archive" name="ArduinoReader.jar">
+      <element id="module-output" name="ArduinoReader" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/jssc-2.8.0.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
