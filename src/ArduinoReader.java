@@ -395,7 +395,9 @@ public class ArduinoReader extends JFrame {
             timeout--;
           }
         }
-        System.out.println("TIMEOUT bout.size() = " + bout.size()+ protocol + " state = " + state );
+        if (DEBUG) {
+          System.out.println("TIMEOUT bout.size() = " + bout.size() + protocol + " state = " + state);
+        }
       }
     }
 
@@ -636,7 +638,7 @@ public class ArduinoReader extends JFrame {
             if (version != null) {
               appendText("Bootloader Version: " + version + "\n");
             } else {
-              appendText("Read Error\n");
+              appendText("Unable to read Bootloader version\n");
             }
           } else {
             appendText("Unable to Sync Bootloader\n");
@@ -666,7 +668,7 @@ public class ArduinoReader extends JFrame {
               appendText("Signature: " + toHex(data[0]) + " " + toHex(data[1]) + " " + toHex(data[2]) +
                         (device != null ? " - " + device.name : "") + "\n");
             } else {
-              appendText("Read Error\n");
+              appendText(" Unable to read device signature\n");
             }
           } else {
             appendText("Unable to Sync Bootloader\n");
@@ -783,7 +785,12 @@ public class ArduinoReader extends JFrame {
                   int checksum = 0;
                   for (int ii = off; ii < data.length; ii++) {
                     if (ii % 16 == 0) {
-                      appendText(toHex((byte) ((addr + ii) >> 8)) + toHex((byte) ((addr + ii) & 0xFF)) + ": ");
+                      if (addr >= 0x10000) {
+                        appendText(toHex24(addr + ii) + ": ");
+                      } else {
+                        appendText(toHex16(addr + ii) + ": ");
+                      }
+                      //appendText(toHex((byte) ((addr + ii) >> 8)) + toHex((byte) ((addr + ii) & 0xFF)) + ": ");
                     }
                     appendText(toHex(data[ii]));
                     checksum += (int) data[ii] & 0xFF;
@@ -809,10 +816,70 @@ public class ArduinoReader extends JFrame {
                 appendText("Unknown device signature\n");
               }
             } else {
-              appendText("Unable to Sync Bootloader\n");
+              appendText("Unable to read device signature\n");
             }
           } else {
-            appendText("Unknown device\n");
+            appendText("Unable to Sync Bootloader\n");
+          }
+        } catch (Unsupported ex) {
+          appendText(ex.message + "\n");
+        } catch (Exception ex) {
+          ex.printStackTrace();
+          appendText(ex.toString() + "\n");
+        } finally {
+          send.close();
+          actions.setEnabled(true);
+        }
+      });
+      doAction.start();
+    });
+    actions.add(mItem = new JMenuItem("DisAsm Bootloader"));
+    mItem.addActionListener(e -> {
+      appendText("Read Bootloader\n");
+      Thread doAction = new Thread(() -> {
+        ArduinoBootDriver send = new ArduinoBootDriver(jPort);
+        try {
+          actions.setEnabled(false);
+          if (send.sync()) {
+            byte[] data = send.getSignature();
+            if (data != null) {
+              MCU device = devices.get(toHex(data[0]) + toHex(data[1]) + toHex(data[2]));
+              if (device != null) {
+                byte[] fuses = send.getFuses();
+                int bootSize = device.getBootSize(fuses);
+                if (fuses == null) {
+                  appendText("Unable to read fuses to determine bootloader size\n");
+                } else {
+                  int maxBoot = device.getMaxBootSize();
+                  appendText("Bootloader using " + bootSize + " bytes of " + maxBoot + "\n");
+                }
+                int addr = device.flashSize - bootSize;
+                data = send.readFlash(addr, bootSize);
+                if (data != null) {
+                  int off = 0;
+                  if (fuses == null) {
+                    while (data[off] == (byte) 0xFF) {
+                      off++;
+                    }
+                  }
+                  if (off > 0) {
+                    appendText("Found bootloader base by skipping 0xFF bytes\n");
+                    off &= 0xFFF0;      // Align to multiple of 16 so printout looks pretty
+                  }
+                  AVRDisassembler disAsm = new AVRDisassembler();
+                  disAsm.dAsm(data, off, addr + off, (data.length - off) / 2);
+                  appendText(disAsm.getDisAsm());
+                } else {
+                  appendText("Read Error\n");
+                }
+              } else {
+                appendText("Unknown device signature\n");
+              }
+            } else {
+              appendText("Unable to read device signature\n");
+            }
+          } else {
+            appendText("Unable to Sync Bootloader\n");
           }
         } catch (Unsupported ex) {
           appendText(ex.message + "\n");
@@ -873,6 +940,15 @@ public class ArduinoReader extends JFrame {
       }
     });
     setVisible(true);
+  }
+
+  private String toHex16 (int val) {
+    return toHex((byte) (val >> 8)) + toHex((byte) (val & 0xFF));
+  }
+
+
+  private String toHex24 (int val) {
+    return toHex((byte) (val >> 16)) + toHex((byte) (val >> 8)) + toHex((byte) (val & 0xFF));
   }
 
   private void appendText (String txt) {

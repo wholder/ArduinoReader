@@ -14,14 +14,14 @@ I suggest using Java 8 JRE or JDK, or later for ArduinoReader, but the code also
 
 ArduinoReader uses Java Simple Serial Connector 2.8.0 to talk to the various Arduno Boards.  The code tries to automate the process of detecting which protocol is needed to talk to a give Arduino Boards but, currently you first need to use the **Settings** menu to select a port and baud rate.  Most recent Arduinos use a baud rate of 115200, but you may need to select 57600, or lower to talk to older boards.
 
-Then, you can use the **Actions** menu to read the BootLoader's version number, the MCU's signature and fuse bytes (not supported by all BootLoaders) as well as read out the first 1024 bytes of Flash Memory, or the section of Memory that can contain the BootLoader.  Ideally, ArduinoReader tries to interpret the fuse bits to detemine the exact potion of Flash Memory used by the BootLoader, but this is not possible for BootLoaders that do not implement a way to read the fuses, such as Optiboot.  In these cases, ArduinoReader will try skipping over unprogrammed Flash Memory bytes (`0xFF`) to determine the base of the BootLoader.  Or, as a fallback, it will dump the entire range of Flash that could contain a BootLoader.  
+Then, you can use the **Actions** menu to read the BootLoader's version number, the MCU's signature and fuse bytes (not supported by all BootLoaders) as well as read out the first 1024 bytes of Flash Memory, or the section of Memory that can contain the BootLoader.  Ideally, ArduinoReader tries to interpret the fuse bits to detemine the exact potion of Flash Memory used by the BootLoader, but this is not possible for BootLoaders that do not implement a way to read the fuses, such as Optiboot.  In these cases, ArduinoReader will try skipping over unprogrammed Flash Memory bytes (`0xFF`) to determine the base of the BootLoader.  Or, as a fallback, it will dump the entire range of Flash that could contain a BootLoader.  _There is also a command to display a disassembly of the BootLoader code, but this feature is still under development and some aspects of the disassembly may be incorrect._
 
 ### On the "To Do" List
 
   + Add an interface to allow mannual selection of a range of Flash Memory to dump to the sceen.
   + Add an option to save a range to Flash Memory to an Intel Hex file.
   + Add an option to checksum the program area of Flash Memory and print it to the display.
-  + Add an AVR disassembler to display disassembled BootLoader code.
+  + Add an AVR disassembler to display disassembled BootLoader code. (added, but still Beta)
   
 ### Credit and Thanks
 

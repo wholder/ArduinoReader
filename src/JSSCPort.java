@@ -33,6 +33,7 @@ public class JSSCPort implements SerialPortEventListener {
   private String              portName;
   private int                 baudRate;
   private SerialPort          serialPort;
+  private boolean             hasListener;
   private List<RXEvent>       rxHandlers = new ArrayList<>();
 
   interface RXEvent {
@@ -86,10 +87,10 @@ public class JSSCPort implements SerialPortEventListener {
       if (portName != null) {
         serialPort = new SerialPort(portName);
         serialPort.openPort();
+        //System.out.println("JSSCPort.touch1200()");
         serialPort.setParams(1200, dataBits, stopBits, parity, false, false);  // baud, 8 bits, 1 stop bit, no parity
         serialPort.setDTR(false);
-        serialPort.closePort();
-        serialPort = null;
+        close();
         try {
           Thread.sleep(400);
         } catch (InterruptedException ex) {
@@ -109,12 +110,9 @@ public class JSSCPort implements SerialPortEventListener {
         }
       }
     } finally {
-      try {
-        if (serialPort != null && serialPort.isOpened()) {
-          serialPort.closePort();
-          serialPort = null;
-        }
-      } catch (SerialPortException e) { }
+      if (serialPort != null && serialPort.isOpened()) {
+        close();
+      }
     }
     return false;
   }
@@ -128,10 +126,12 @@ public class JSSCPort implements SerialPortEventListener {
     if (portName != null) {
       serialPort = new SerialPort(portName);
       serialPort.openPort();
+      //System.out.println("JSSCPort.open()");
       serialPort.setParams(baudRate, dataBits, stopBits, parity, false, false);  // baud, 8 bits, 1 stop bit, no parity
       serialPort.setEventsMask(eventMasks);
       serialPort.setFlowControlMode(flowCtrl);
       serialPort.addEventListener(JSSCPort.this);
+      hasListener = true;
       setRXHandler(handler);
       return true;
     }
@@ -144,9 +144,13 @@ public class JSSCPort implements SerialPortEventListener {
         synchronized (this) {
           rxHandlers.clear();
         }
-        serialPort.removeEventListener();
+        if (hasListener) {
+          serialPort.removeEventListener();
+          hasListener = false;
+        }
         serialPort.closePort();
         serialPort = null;
+        //System.out.println("JSSCPort.close()");
       } catch (SerialPortException ex) {
         ex.printStackTrace();
       }
