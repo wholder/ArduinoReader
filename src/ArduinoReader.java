@@ -46,10 +46,10 @@ public class ArduinoReader extends JFrame {
       if (fuses != null && fuses.length == 3) {
         if (fuse == 'H') {
           int shift = (fuses[1] >> 1) & 0x03;
-          return base << 3 - shift;
+          return base << (3 - shift);
         } else if (fuse == 'E') {
           int shift = (fuses[2] >> 1) & 0x03;
-          return base << 3 - shift;
+          return base << (3 - shift);
         }
       }
       return base << 3;   // Assume max size, if fuses are not available
