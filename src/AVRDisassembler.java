@@ -18,72 +18,76 @@ public class AVRDisassembler {
    * @param count number of 16 bit words to disassemble
    */
   void dAsm (byte[] flash, int offset, int addr, int count) {
-    for (int ii = 0; ii < count; ii++) {
-      cursor = 0;
-      boolean skipWord = false;
-      int idx = ii * 2;
-      int word2 = 0;
-      // 16 Bit Opcode is MSB:LSB Order
-      int opcode = getFlashWord(flash, offset + idx);
-      if (addr + idx >= 0x10000) {
-        printHex24(addr + idx);
-      } else {
-        printHex16(addr + idx);
-      }
-      printCmd();
-      printHex16(opcode);
-      tabTo(14);
-      if ((opcode & ~0x1F0) == 0x9000) {                        // lds (4 byte instruction)
-        printInst("lds");
-        printDstReg((opcode & 0x1F0) >> 4);
-        print(",0x");
-        word2 = getFlashWord(flash, offset + idx + 2);
-        printHex16(word2);
-        skipWord = true;
-      } else if ((opcode & ~0x1F0) == 0x9200) {                 // sts (4 byte instruction)
-        printInst("sts");
-        print("0x");
-        word2 = getFlashWord(flash, offset + idx + 2);
-        printHex16(word2);
-        printSrcReg((opcode & 0x1F0) >> 4);
-        skipWord = true;
-      } else if ((opcode & 0x0FE0E) == 0x940C) {                // jmp (4 byte instruction)
-        printInst("jmp");
-        print("0x");
-        word2 = getFlashWord(flash, offset + idx + 2);
-        // 22 bit address
-        int add22 = (opcode & 0x1F0) << 13;
-        add22 += (opcode & 1) << 16;
-        add22 += word2;
-        printHex24(add22 * 2);
-        skipWord = true;
-      } else if ((opcode & 0x0FE0E) == 0x940E) {                // call (4 byte instruction)
-        printInst("call");
-        print("0x");
-        word2 = getFlashWord(flash, offset + idx + 2);
-        // 22 bit address
-        int add22 = (opcode & 0x1F0) << 13;
-        add22 += (opcode & 1) << 16;
-        add22 += word2;
-        printHex24(add22 * 2);
-        skipWord = true;
-      } else {
-        dAsm2Byte(addr + idx, opcode);
-      }
-      if (skipWord) {
-        // Print 2nd line to show extra word used by 2 word instructions
-        println();
-        if (addr + idx + 2 > 0x10000) {
-          printHex24(addr + idx + 2);
+    try {
+      for (int ii = 0; ii < count; ii++) {
+        cursor = 0;
+        boolean skipWord = false;
+        int idx = ii * 2;
+        int word2 = 0;
+        // 16 Bit Opcode is MSB:LSB Order
+        int opcode = getFlashWord(flash, offset + idx);
+        if (addr + idx >= 0x10000) {
+          printHex24(addr + idx);
         } else {
-          printHex16(addr + idx + 2);
+          printHex16(addr + idx);
         }
-        print(":");
-        tabTo(8);
-        printHex16(word2);
-        ii++;
+        printCmd();
+        printHex16(opcode);
+        tabTo(14);
+        if ((opcode & ~0x1F0) == 0x9000) {                        // lds (4 byte instruction)
+          printInst("lds");
+          printDstReg((opcode & 0x1F0) >> 4);
+          print(",0x");
+          word2 = getFlashWord(flash, offset + idx + 2);
+          printHex16(word2);
+          skipWord = true;
+        } else if ((opcode & ~0x1F0) == 0x9200) {                 // sts (4 byte instruction)
+          printInst("sts");
+          print("0x");
+          word2 = getFlashWord(flash, offset + idx + 2);
+          printHex16(word2);
+          printSrcReg((opcode & 0x1F0) >> 4);
+          skipWord = true;
+        } else if ((opcode & 0x0FE0E) == 0x940C) {                // jmp (4 byte instruction)
+          printInst("jmp");
+          print("0x");
+          word2 = getFlashWord(flash, offset + idx + 2);
+          // 22 bit address
+          int add22 = (opcode & 0x1F0) << 13;
+          add22 += (opcode & 1) << 16;
+          add22 += word2;
+          printHex24(add22 * 2);
+          skipWord = true;
+        } else if ((opcode & 0x0FE0E) == 0x940E) {                // call (4 byte instruction)
+          printInst("call");
+          print("0x");
+          word2 = getFlashWord(flash, offset + idx + 2);
+          // 22 bit address
+          int add22 = (opcode & 0x1F0) << 13;
+          add22 += (opcode & 1) << 16;
+          add22 += word2;
+          printHex24(add22 * 2);
+          skipWord = true;
+        } else {
+          dAsm2Byte(addr + idx, opcode);
+        }
+        if (skipWord) {
+          // Print 2nd line to show extra word used by 2 word instructions
+          println();
+          if (addr + idx + 2 > 0x10000) {
+            printHex24(addr + idx + 2);
+          } else {
+            printHex16(addr + idx + 2);
+          }
+          print(":");
+          tabTo(8);
+          printHex16(word2);
+          ii++;
+        }
+        println();
       }
-      println();
+    } catch (ArrayIndexOutOfBoundsException ex) {
+      print("<end of data>");
     }
   }
 

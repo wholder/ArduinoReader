@@ -355,7 +355,7 @@ public class ArduinoReader extends JFrame {
         state = 0;
         bout.reset();
         len = bytes;
-        timeout = 50;
+        timeout = 100;
       } else if (protocol == Protocol.STKV2)  {
         state = 0;
         bout.reset();
@@ -395,9 +395,9 @@ public class ArduinoReader extends JFrame {
             timeout--;
           }
         }
-        if (DEBUG) {
-          System.out.println("TIMEOUT bout.size() = " + bout.size() + protocol + " state = " + state);
-        }
+      }
+      if (DEBUG) {
+        System.out.println("TIMEOUT bout.size() = " + bout.size() + protocol + " state = " + state);
       }
     }
 
@@ -422,21 +422,31 @@ public class ArduinoReader extends JFrame {
         return null;
       } else if (protocol == Protocol.STKV1)  {
         int blockSize = 256;
+        read_Loop:
         while (length > 0) {
           int len = length > blockSize ? blockSize : length;
           if (DEBUG) {
             System.out.println("addr: " + toHex(addr) + ", len: " + len + ", length: " + length);
           }
-          if (sendCmd(new byte[]{0x55, (byte) (addr & 0xFF), (byte) (addr >> 8), 0x20}, 0) == null) {
-            return null;
+          for (int ii =  0; ii < 4; ii++) {
+            if (sendCmd(new byte[]{0x55, (byte) (addr & 0xFF), (byte) (addr >> 8), 0x20}, 0) == null) {
+              return null;
+            }
+            byte[] rsp = sendCmd(new byte[]{0x74, (byte) (len >> 8), (byte) (len & 0xFF), 'F', 0x20}, len);
+            if (rsp!= null) {
+              buf.write(rsp, 1, len);
+              length -= blockSize;
+              addr += blockSize;
+              continue read_Loop;
+            }
+            if (DEBUG) {
+              System.out.println("Retry");
+            }
           }
-          byte[] rsp = sendCmd(new byte[]{0x74, (byte) (len >> 8), (byte) (len & 0xFF), 'F', 0x20}, len);
-          if (rsp == null) {
-            return null;
+          if (DEBUG) {
+            System.out.println("Retry Failed");
           }
-          buf.write(rsp, 1, len);
-          length -= blockSize;
-          addr += blockSize;
+          return null;
         }
         return buf.toByteArray();
       } else if (protocol == Protocol.STKV2)  {
