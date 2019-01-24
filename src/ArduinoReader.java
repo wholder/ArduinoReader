@@ -46,10 +46,10 @@ public class ArduinoReader extends JFrame {
       if (fuses != null && fuses.length == 3) {
         if (fuse == 'H') {
           int shift = (fuses[1] >> 1) & 0x03;
-          return base << shift;
+          return base << 3 - shift;
         } else if (fuse == 'E') {
           int shift = (fuses[2] >> 1) & 0x03;
-          return base << shift;
+          return base << 3 - shift;
         }
       }
       return base << 3;   // Assume max size, if fuses are not available
@@ -578,6 +578,11 @@ public class ArduinoReader extends JFrame {
             break;
           case 2:
             // Check for STK_OK (0x10)
+            if (DEBUG) {
+              if (checksum != 0) {
+                System.out.println("STK_OK not found on Read");
+              }
+            }
             state = cc == 0x10 ? 3 : 0;
             break;
         }
@@ -612,6 +617,11 @@ public class ArduinoReader extends JFrame {
             }
             break;
           case 6:               //  Wait for CHECKSUM (1 byte)
+            if (DEBUG) {
+              if (checksum != 0) {
+                System.out.println("Checksum error on Read");
+              }
+            }
             state = checksum == 0 ? 7 : 0;
             break;
           case 7:               //  Meesage Received and Checksum is Good
