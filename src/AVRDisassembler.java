@@ -1,6 +1,6 @@
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.StringTokenizer;
 
 @SuppressWarnings("StatementWithEmptyBody")
 public class AVRDisassembler {
@@ -514,15 +514,58 @@ public class AVRDisassembler {
     return new String(bout.toByteArray(), StandardCharsets.UTF_8);
   }
 
-  public static void main (String[] args) {
-    byte[] data = {
-        (byte) 0x0C, (byte) 0x94, (byte) 0x12, (byte) 0x01, (byte) 0x0C, (byte) 0x94, (byte) 0x3A, (byte) 0x01,
-        (byte) 0x0C, (byte) 0x94, (byte) 0x3A, (byte) 0x01, (byte) 0x0C, (byte) 0x94, (byte) 0x3A, (byte) 0x01,
-        (byte) 0x0C, (byte) 0x94, (byte) 0x3A, (byte) 0x01, (byte) 0x0C, (byte) 0x94, (byte) 0x3A, (byte) 0x01,
-        (byte) 0x0C, (byte) 0x94, (byte) 0x3A, (byte) 0x01, (byte) 0x0C, (byte) 0x94, (byte) 0x3A, (byte) 0x01,
-   };
+  /*
+   *  Test Code for Disassembler
+   */
+
+  static class IntelHex {
+    int     base;
+    byte[]  code;
+  }
+
+  private static IntelHex loadIntelHex (String file) throws Exception {
+    InputStream fis;
+    if (file.startsWith("res:")) {
+      fis = AVRDisassembler.class.getResourceAsStream(file.substring(4));
+    } else {
+      fis = new FileInputStream(file);
+    }
+    byte[] data = new byte[fis.available()];
+    fis.read(data);
+    fis.close();
+    String hex = new String(data, "UTF8");
+    boolean needAddr = true;
+    IntelHex iHex = new IntelHex();
+    ByteArrayOutputStream buf = new ByteArrayOutputStream();
+    StringTokenizer tok = new StringTokenizer(hex, "\n\r");
+    while (tok.hasMoreTokens()) {
+      String line = tok.nextToken();
+      if (line.startsWith(":")) {
+        if (needAddr) {
+          String add = line.substring(3, 7);
+          iHex.base = Integer.parseInt(add, 16);
+          needAddr = false;
+        }
+        String type = line.substring(7, 9);
+        line = line.substring(9, line.length() - 2);
+        if (type.equals("00")) {
+          int len = line.length();
+          for (int ii = 0; ii < len; ii += 2) {
+            String bHex = line.substring(ii, ii + 2);
+            byte tmp = (byte) Integer.parseInt(bHex, 16);
+            buf.write(tmp);
+          }
+        }
+      }
+    }
+    iHex.code = buf.toByteArray();
+    return iHex;
+  }
+
+    public static void main (String[] args) throws Exception {
+    IntelHex iHex = loadIntelHex("res:optiboot_atmega328.hex");
     AVRDisassembler disAsm = new AVRDisassembler();
-    disAsm.dAsm(data, 0, 0x0000, data.length / 2);
+    disAsm.dAsm(iHex.code, 0, iHex.base, iHex.code.length / 2);
     System.out.println(disAsm.getDisAsm());
   }
 }

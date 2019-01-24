@@ -19,6 +19,7 @@ import javax.swing.text.Document;
  */
 public class ArduinoReader extends JFrame {
   private static final boolean        DEBUG = false;
+  private static final boolean        skipFF = true;
   private enum                        Protocol {STKV1, CATERINA, STKV2}
   private static Font                 tFont;
   private static Map<String,MCU> devices = new HashMap<>();
@@ -30,18 +31,22 @@ public class ArduinoReader extends JFrame {
 
   static class MCU {
     String  name;
-    int     flashSize, bootSize, shift, base;
+    int     flashSize, shift, base;
     char    fuse;
 
-    MCU (String name, int flashSize, int bootSize, char fuse, int shift, int base) {
+    MCU (String name, int flashSize, char fuse, int shift, int base) {
       this.name = name;
       this.flashSize = flashSize;
-      this.bootSize = bootSize;
       this.fuse = fuse;
       this.shift = shift;
       this.base = base;
     }
 
+    /**
+     * Calculates size of bootloader
+     * @param fuses byte[] array of fuses, or null
+     * @return size of bootloader in words
+     */
     int getBootSize (byte[] fuses) {
       if (fuses != null && fuses.length == 3) {
         if (fuse == 'H') {
@@ -56,7 +61,7 @@ public class ArduinoReader extends JFrame {
     }
 
     int getMaxBootSize () {
-      return base << 3;
+      return (base << 3) * 2;
     }
   }
 
@@ -71,22 +76,22 @@ public class ArduinoReader extends JFrame {
     } else {
       tFont = new Font("Courier", Font.PLAIN, 12);
     }
-    // STK500V1-based Arduino Microcontrollers                                          Flash  Boot
-    devices.put("1E930A", new MCU("ATmega88A",   0x02000, 0x0400, 'E', 1, 128));   // 8K,   1K
-    devices.put("1E930F", new MCU("ATmega88PA",  0x02000, 0x0400, 'E', 1, 128));   // 8K,   1K
-    devices.put("1E9406", new MCU("ATmega168A",  0x04000, 0x0400, 'E', 1, 256));   // 16K,  1K
-    devices.put("1E940B", new MCU("ATmega168PA", 0x04000, 0x0400, 'E', 1, 256));   // 16K,  1K
-    devices.put("1E9514", new MCU("ATmega328",   0x08000, 0x0800, 'H', 1, 256));   // 32K,  2K
-    devices.put("1E950F", new MCU("ATmega328P",  0x08000, 0x0800, 'H', 1, 256));   // 32K,  2K
+    // STK500V1-based Arduino Microcontrollers                              Flash  Boot (words)
+    devices.put("1E930A", new MCU("ATmega88A",   0x02000, 'E', 1, 128));   // 8K,   1K
+    devices.put("1E930F", new MCU("ATmega88PA",  0x02000, 'E', 1, 128));   // 8K,   1K
+    devices.put("1E9406", new MCU("ATmega168A",  0x04000, 'E', 1, 256));   // 16K,  1K
+    devices.put("1E940B", new MCU("ATmega168PA", 0x04000, 'E', 1, 256));   // 16K,  1K
+    devices.put("1E9514", new MCU("ATmega328",   0x08000, 'H', 1, 256));   // 32K,  2K
+    devices.put("1E950F", new MCU("ATmega328P",  0x08000, 'H', 1, 256));   // 32K,  2K
     // Caterina-based Arduino Microcontrollers
-    devices.put("1E9488", new MCU("ATmega16U4",  0x10000, 0x0800, 'H', 1, 256));   // 64K,  2K
-    devices.put("1E9587", new MCU("ATmega32U4",  0x08000, 0x0800, 'H', 1, 256));   // 32K,  2K
+    devices.put("1E9488", new MCU("ATmega16U4",  0x10000, 'H', 1, 256));   // 64K,  2K
+    devices.put("1E9587", new MCU("ATmega32U4",  0x08000, 'H', 1, 256));   // 32K,  2K
     // STK500V2-based Arduino Microcontrollers
-    devices.put("1E9608", new MCU("ATmega640",   0x10000, 0x1000, 'H', 1, 512));   // 64K,  4K
-    devices.put("1E9703", new MCU("ATmega1280",  0x20000, 0x1000, 'H', 1, 512));   // 128K, 4K
-    devices.put("1E9704", new MCU("ATmega1281",  0x20000, 0x1000, 'H', 1, 512));   // 128K, 4K
-    devices.put("1E9801", new MCU("ATmega2560",  0x40000, 0x1000, 'H', 1, 512));   // 256K, 4K
-    devices.put("1E9802", new MCU("ATmega2561",  0x40000, 0x1000, 'H', 1, 512));   // 256K, 4K
+    devices.put("1E9608", new MCU("ATmega640",   0x10000, 'H', 1, 512));   // 64K,  4K
+    devices.put("1E9703", new MCU("ATmega1280",  0x20000, 'H', 1, 512));   // 128K, 4K
+    devices.put("1E9704", new MCU("ATmega1281",  0x20000, 'H', 1, 512));   // 128K, 4K
+    devices.put("1E9801", new MCU("ATmega2560",  0x40000, 'H', 1, 512));   // 256K, 4K
+    devices.put("1E9802", new MCU("ATmega2561",  0x40000, 'H', 1, 512));   // 256K, 4K
   }
 
   /*
@@ -425,11 +430,12 @@ public class ArduinoReader extends JFrame {
         read_Loop:
         while (length > 0) {
           int len = length > blockSize ? blockSize : length;
+          int wordAddr = addr >> 1;
           if (DEBUG) {
             System.out.println("addr: " + toHex(addr) + ", len: " + len + ", length: " + length);
           }
           for (int ii =  0; ii < 4; ii++) {
-            if (sendCmd(new byte[]{0x55, (byte) (addr & 0xFF), (byte) (addr >> 8), 0x20}, 0) == null) {
+            if (sendCmd(new byte[]{0x55, (byte) (wordAddr & 0xFF), (byte) (wordAddr >> 8), 0x20}, 0) == null) {
               return null;
             }
             byte[] rsp = sendCmd(new byte[]{0x74, (byte) (len >> 8), (byte) (len & 0xFF), 'F', 0x20}, len);
@@ -781,7 +787,7 @@ public class ArduinoReader extends JFrame {
               MCU device = devices.get(toHex(data[0]) + toHex(data[1]) + toHex(data[2]));
               if (device != null) {
                 byte[] fuses = send.getFuses();
-                int bootSize = device.getBootSize(fuses);
+                int bootSize = device.getBootSize(fuses) * 2;
                 if (fuses == null) {
                   appendText("Unable to read fuses to determine bootloader size\n");
                 } else {
@@ -792,9 +798,11 @@ public class ArduinoReader extends JFrame {
                 data = send.readFlash(addr, bootSize);
                 if (data != null) {
                   int off = 0;
-                  if (fuses == null) {
-                    while (data[off] == (byte) 0xFF) {
-                      off++;
+                  if (skipFF) {
+                    if (fuses == null) {
+                      while (data[off] == (byte) 0xFF) {
+                        off++;
+                      }
                     }
                   }
                   if (off > 0) {
@@ -866,7 +874,7 @@ public class ArduinoReader extends JFrame {
               MCU device = devices.get(toHex(data[0]) + toHex(data[1]) + toHex(data[2]));
               if (device != null) {
                 byte[] fuses = send.getFuses();
-                int bootSize = device.getBootSize(fuses);
+                int bootSize = device.getBootSize(fuses) * 2;
                 if (fuses == null) {
                   appendText("Unable to read fuses to determine bootloader size\n");
                 } else {
@@ -877,9 +885,11 @@ public class ArduinoReader extends JFrame {
                 data = send.readFlash(addr, bootSize);
                 if (data != null) {
                   int off = 0;
-                  if (fuses == null) {
-                    while (data[off] == (byte) 0xFF) {
-                      off++;
+                  if (skipFF) {
+                    if (fuses == null) {
+                      while (data[off] == (byte) 0xFF) {
+                        off++;
+                      }
                     }
                   }
                   if (off > 0) {
