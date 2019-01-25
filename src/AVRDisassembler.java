@@ -284,52 +284,53 @@ public class AVRDisassembler {
 
   private boolean dAsmNoArgs (int opcode) {
     switch (opcode) {
-      case 0x9598: print("break");   return true;
-      case 0x9488: print("clc");     return true;
-      case 0x94d8: print("clh");     return true;
-      case 0x94f8: print("cli");     return true;
-      case 0x94a8: print("cln");     return true;
-      case 0x94c8: print("cls");     return true;
-      case 0x94e8: print("clt");     return true;
-      case 0x94b8: print("clv");     return true;
-      case 0x9498: print("clz");     return true;
-      case 0x9519: print("eicall");  return true;
-      case 0x9419: print("eijmp");   return true;
-      case 0x95d8: print("elpm");    return true;
-      case 0x9509: print("icall");   return true;
-      case 0x9409: print("ijmp");    return true;
-      case 0x95c8: print("lpm");     return true;
       case 0x0000: print("nop");     return true;
-      case 0x9508: print("ret");     return true;
-      case 0x9518: print("reti");    return true;
       case 0x9408: print("sec");     return true;
-      case 0x9458: print("seh");     return true;
-      case 0x9478: print("sei");     return true;
-      case 0x9428: print("sen");     return true;
-      case 0x9448: print("ses");     return true;
-      case 0x9468: print("set");     return true;
-      case 0x9438: print("sev");     return true;
+      case 0x9409: print("ijmp");    return true;
       case 0x9418: print("sez");     return true;
+      case 0x9419: print("eijmp");   return true;
+      case 0x9428: print("sen");     return true;
+      case 0x9438: print("sev");     return true;
+      case 0x9448: print("ses");     return true;
+      case 0x9458: print("seh");     return true;
+      case 0x9468: print("set");     return true;
+      case 0x9478: print("sei");     return true;
+      case 0x9488: print("clc");     return true;
+      case 0x9498: print("clz");     return true;
+      case 0x94A8: print("cln");     return true;
+      case 0x94B8: print("clv");     return true;
+      case 0x94C8: print("cls");     return true;
+      case 0x94D8: print("clh");     return true;
+      case 0x94E8: print("clt");     return true;
+      case 0x94F8: print("cli");     return true;
+
+      case 0x9508: print("ret");     return true;
+      case 0x9509: print("icall");   return true;
+      case 0x9518: print("reti");    return true;
+      case 0x9519: print("eicall");  return true;
       case 0x9588: print("sleep");    return true;
-      case 0x95e8: print("spm");     return true;
-      case 0x95f8: print("spm");     return true;
-      case 0x95a8: print("wdr");     return true;
+      case 0x9598: print("break");   return true;
+      case 0x95A8: print("wdr");     return true;
+      case 0x95C8: print("lpm");     return true;
+      case 0x95D8: print("elpm");    return true;
+      case 0x95E8: print("spm");     return true;
+      case 0x95F8: print("spm");     return true;
     }
     return false;
   }
 
   private boolean dAsmSetClr (int opcode) {
-    switch ((opcode & ~0x0070) & 0xFFFF) {
-      case 0x9488: printInst("bclr"); return true;
+    switch (opcode & 0xFF8F) {
       case 0x9408: printInst("bset"); return true;
+      case 0x9488: printInst("bclr"); return true;
     }
     return false;
   }
 
   private boolean dAsmLogic (int opcode) {
-    switch ((opcode & ~0x01F0) & 0xFFFF) {
-      case 0x900f: printInst("pop");   return true;
-      case 0x920f: printInst("push");  return true;
+    switch (opcode & 0xFE0F) {
+      case 0x900F: printInst("pop");   return true;
+      case 0x920F: printInst("push");  return true;
       case 0x9400: printInst("com");   return true;
       case 0x9401: printInst("neg");   return true;
       case 0x9402: printInst("swap");  return true;
@@ -337,46 +338,46 @@ public class AVRDisassembler {
       case 0x9405: printInst("asr");   return true;
       case 0x9406: printInst("lsr");   return true;
       case 0x9407: printInst("ror");   return true;
-      case 0x940a: printInst("dec");   return true;
+      case 0x940A: printInst("dec");   return true;
     }
     return false;
   }
 
   private boolean dAsmXYZStore (int opcode) {
-    switch ((opcode & ~0x01F0) & 0xFFFF) {
+    switch (opcode & 0xFE0F) {
+      case 0x8200: printInst("st");  print("Z");  return true;
+      case 0x8208: printInst("st");  print("Y");  return true;
+      case 0x9201: printInst("st");  print("Z+"); return true;
+      case 0x9202: printInst("st");  print("-Z"); return true;
       case 0x9204: printInst("xch"); print("Z");  return true;
       case 0x9205: printInst("las"); print("Z");  return true;
       case 0x9206: printInst("lac"); print("Z");  return true;
       case 0x9207: printInst("lat"); print("Z");  return true;
-      case 0x920c: printInst("st");  print("X");  return true;
-      case 0x920d: printInst("st");  print("X+"); return true;
-      case 0x920e: printInst("st");  print("-X"); return true;
-      case 0x8208: printInst("st");  print("Y");  return true;
       case 0x9209: printInst("st");  print("Y+"); return true;
-      case 0x920a: printInst("st");  print("-Y"); return true;
-      case 0x8200: printInst("st");  print("Z");  return true;
-      case 0x9201: printInst("st");  print("Z+"); return true;
-      case 0x9202: printInst("st");  print("-Z"); return true;
+      case 0x920A: printInst("st");  print("-Y"); return true;
+      case 0x920C: printInst("st");  print("X");  return true;
+      case 0x920D: printInst("st");  print("X+"); return true;
+      case 0x920E: printInst("st");  print("-X"); return true;
     }
     return false;
   }
 
   private boolean dAsmXYZLoad (int opcode) {
     String src;
-    switch ((opcode & ~0x1F0) & 0xFFFF) {
+    switch (opcode & 0xFE0F) {
+      case 0x8000: printInst("ld");   src = "Z";  break;
+      case 0x8008: printInst("ld");   src = "Y";  break;
+      case 0x9001: printInst("ld");   src = "Z+"; break;
+      case 0x9002: printInst("ld");   src = "-Z"; break;
       case 0x9004: printInst("lpm");  src = "Z";  break;
       case 0x9005: printInst("lpm");  src = "Z+"; break;
       case 0x9006: printInst("elpm"); src = "Z";  break;
       case 0x9007: printInst("elpm"); src = "Z+"; break;
-      case 0x900c: printInst("ld");   src = "X";  break;
-      case 0x900d: printInst("ld");   src = "X+"; break;
-      case 0x900e: printInst("ld");   src = "-X"; break;
-      case 0x8008: printInst("ld");   src = "Y";  break;
       case 0x9009: printInst("ld");   src = "Y+"; break;
-      case 0x900a: printInst("ld");   src = "-Y"; break;
-      case 0x8000: printInst("ld");   src = "Z";  break;
-      case 0x9001: printInst("ld");   src = "Z+"; break;
-      case 0x9002: printInst("ld");   src = "-Z"; break;
+      case 0x900A: printInst("ld");   src = "-Y"; break;
+      case 0x900C: printInst("ld");   src = "X";  break;
+      case 0x900D: printInst("ld");   src = "X+"; break;
+      case 0x900E: printInst("ld");   src = "-X"; break;
       default: return false;
     }
     printDstReg((opcode & 0x1F0) >> 4);
@@ -387,9 +388,9 @@ public class AVRDisassembler {
 
   private boolean dAsmLddYZQ (int opcode) {
     String src;
-    switch ((opcode & ~0x2DF7) & 0xFFFF) {
-      case 0x8008: printInst("ldd");  src = "Y+";  break;
+    switch (opcode & 0xD208) {
       case 0x8000: printInst("ldd");  src = "Z+";  break;
+      case 0x8008: printInst("ldd");  src = "Y+";  break;
       default: return false;
     }
     int qq = ((opcode & 0x2000) >> 8) + ((opcode & 0x0C00) >> 7) + (opcode & 0x07);
@@ -401,9 +402,9 @@ public class AVRDisassembler {
   }
 
   private boolean dAsmStdYZQ (int opcode) {
-    switch ((opcode & ~0x2DF7) & 0xFFFF) {
-      case 0x8208: printInst("std");  print("Y+");  break;
+    switch (opcode & 0xD208) {
       case 0x8200: printInst("std");  print("Z+");  break;
+      case 0x8208: printInst("std");  print("Y+");  break;
       default: return false;
     }
     int qq = ((opcode & 0x2000) >> 8) + ((opcode & 0x0C00) >> 7) + (opcode & 0x07);
@@ -413,25 +414,25 @@ public class AVRDisassembler {
     return true;
   }
   private boolean dAsmRelCallJmp (int opcode) {
-    switch ((opcode & ~0xFFF) & 0xFFFF) {
-      case 0xd000: printInst("rcall"); return true;
-      case 0xc000: printInst("rjmp");  return true;
+    switch (opcode & 0xF000) {
+      case 0xC000: printInst("rjmp");  return true;
+      case 0xD000: printInst("rcall"); return true;
     }
     return false;
   }
 
   private boolean dAsmBitOps2  (int opcode) {
-    switch ((opcode & ~0xFF) & 0xFFFF) {
+    switch (opcode & 0xFF00) {
       case 0x9800: printInst("cbi");   return true;
-      case 0x9a00: printInst("sbi");   return true;
       case 0x9900: printInst("sbic");  return true;
-      case 0x9b00: printInst("sbis");  return true;
+      case 0x9A00: printInst("sbi");   return true;
+      case 0x9B00: printInst("sbis");  return true;
     }
     return false;
   }
 
   private boolean dAsmByteImd (int opcode) {
-    switch ((opcode & ~0xFFF) & 0xFFFF) {
+    switch (opcode & 0xF000) {
       case 0x3000: printInst("cpi");   return true;
       case 0x4000: printInst("sbci");  return true;
       case 0x5000: printInst("subi");  return true;
@@ -443,25 +444,25 @@ public class AVRDisassembler {
   }
 
   private boolean dAsmArith (int opcode) {
-    switch ((opcode & ~0x3FF) & 0xFFFF) {
-      case 0x1c00: printInst("adc");   return true;
-      case 0x0c00: printInst("add");   return true;
-      case 0x2000: printInst("and");   return true;
-      case 0x1400: printInst("cp ");   return true;
+    switch (opcode & 0xFC00) {
       case 0x0400: printInst("cpc");   return true;
-      case 0x1000: printInst("cpse");  return true;
-      case 0x2400: printInst("eor");   return true;
-      case 0x2c00: printInst("mov");   return true;
-      case 0x9c00: printInst("mul");   return true;
-      case 0x2800: printInst("or");    return true;
       case 0x0800: printInst("sbc");   return true;
+      case 0x0C00: printInst("add");   return true;
+      case 0x1000: printInst("cpse");  return true;
+      case 0x1400: printInst("cp ");   return true;
       case 0x1800: printInst("sub");   return true;
+      case 0x1C00: printInst("adc");   return true;
+      case 0x2000: printInst("and");   return true;
+      case 0x2400: printInst("eor");   return true;
+      case 0x2800: printInst("or");    return true;
+      case 0x2C00: printInst("mov");   return true;
+      case 0x9C00: printInst("mul");   return true;
     }
     return false;
   }
 
   private boolean dAsmWordImd (int opcode) {
-    switch ((opcode & ~0xFF) & 0xFFFF) {
+    switch (opcode & 0xFF00) {
       case 0x9600: printInst("adiw"); return true;
       case 0x9700: printInst("sbiw"); return true;
     }
@@ -469,39 +470,39 @@ public class AVRDisassembler {
   }
 
   private boolean dAsmBitOps (int opcode) {
-    switch ((opcode & ~0x1F7) & 0xFFFF) {
-      case 0xf800: printInst("bld");   return true;
-      case 0xfa00: printInst("bst");   return true;
-      case 0xfc00: printInst("sbrc");  return true;
-      case 0xfe00: printInst("sbrs");  return true;
+    switch (opcode & 0xFE08) {
+      case 0xF800: printInst("bld");   return true;
+      case 0xFA00: printInst("bst");   return true;
+      case 0xFC00: printInst("sbrc");  return true;
+      case 0xFE00: printInst("sbrs");  return true;
     }
     return false;
   }
 
   private boolean dAsmBranch (int opcode) {
-    switch ((opcode & ~0x3F8) & 0xFFFF) {
-      case 0xf000: printInst("brcs"); return true;   // 1111 00kk kkkk k000
-      case 0xf001: printInst("breq"); return true;   // 1111 00kk kkkk k001
-      case 0xf002: printInst("brmi"); return true;   // 1111 00kk kkkk k010
-      case 0xf003: printInst("brvs"); return true;   // 1111 00kk kkkk k011
-      case 0xf004: printInst("brlt"); return true;   // 1111 00kk kkkk k100
-      case 0xf005: printInst("brhs"); return true;   // 1111 00kk kkkk k101
-      case 0xf006: printInst("brts"); return true;   // 1111 00kk kkkk k110
-      case 0xf007: printInst("brie"); return true;   // 1111 00kk kkkk k111
-      case 0xf400: printInst("brcc"); return true;   // 1111 01kk kkkk k000
-      case 0xf401: printInst("brne"); return true;   // 1111 01kk kkkk k001
-      case 0xf402: printInst("brpl"); return true;   // 1111 01kk kkkk k010
-      case 0xf403: printInst("brvc"); return true;   // 1111 01kk kkkk k011
-      case 0xf404: printInst("brge"); return true;   // 1111 01kk kkkk k100
-      case 0xf405: printInst("brhc"); return true;   // 1111 01kk kkkk k101
-      case 0xf406: printInst("brtc"); return true;   // 1111 01kk kkkk k110
-      case 0xf407: printInst("brid"); return true;   // 1111 01kk kkkk k111
+    switch (opcode & 0xFC07) {
+      case 0xF000: printInst("brcs"); return true;   // 1111 00kk kkkk k000
+      case 0xF001: printInst("breq"); return true;   // 1111 00kk kkkk k001
+      case 0xF002: printInst("brmi"); return true;   // 1111 00kk kkkk k010
+      case 0xF003: printInst("brvs"); return true;   // 1111 00kk kkkk k011
+      case 0xF004: printInst("brlt"); return true;   // 1111 00kk kkkk k100
+      case 0xF005: printInst("brhs"); return true;   // 1111 00kk kkkk k101
+      case 0xF006: printInst("brts"); return true;   // 1111 00kk kkkk k110
+      case 0xF007: printInst("brie"); return true;   // 1111 00kk kkkk k111
+      case 0xF400: printInst("brcc"); return true;   // 1111 01kk kkkk k000
+      case 0xF401: printInst("brne"); return true;   // 1111 01kk kkkk k001
+      case 0xF402: printInst("brpl"); return true;   // 1111 01kk kkkk k010
+      case 0xF403: printInst("brvc"); return true;   // 1111 01kk kkkk k011
+      case 0xF404: printInst("brge"); return true;   // 1111 01kk kkkk k100
+      case 0xF405: printInst("brhc"); return true;   // 1111 01kk kkkk k101
+      case 0xF406: printInst("brtc"); return true;   // 1111 01kk kkkk k110
+      case 0xF407: printInst("brid"); return true;   // 1111 01kk kkkk k111
     }
     return false;
   }
 
   private boolean dAsmMul (int opcode) {
-    switch ((opcode & ~0x077) & 0xFFFF) {
+    switch (opcode & 0xFF88) {
       case 0x0300: printInst("mulsu");   return true;
       case 0x0308: printInst("fmul");    return true;
       case 0x0380: printInst("fmuls");   return true;

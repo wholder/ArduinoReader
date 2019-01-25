@@ -239,73 +239,70 @@ public class ArduinoReader extends JFrame {
     }
 
     boolean sync () throws Exception {
-      try {
-        for (int ii = 0; ii < 3; ii++) {
-          int type = (ii + tryFirst) % 3;
-          switch (type) {
-          case 0:
-            protocol = Protocol.STKV1;
-            if (jPort.open(this)) {
-              // Toggle DTR to RESET Arduino
-              jPort.setDTR(false);
-              Thread.sleep(100);
-              jPort.setDTR(true);
-              for (int retry = 0; retry < 5; retry++) {
-                if (sendCmd(new byte[]{0x30, 0x20}, 0) != null) {
-                  if (firstTime || type != tryFirst) {
-                    appendText("STKV1-based Bootloader detected\n");
-                    firstTime = false;
-                  }
-                  tryFirst = 0;
-                  return true;
-                }
-              }
-              jPort.close();
-            }
-            break;
-          case 1:
-            protocol = Protocol.CATERINA;
-            jPort.touch1200();
-            if (jPort.open(this)) {
-              byte[] data = sendCmd(new byte[]{'S'}, 7);
-              // Note: bootloader only returns first 7 bytes of name
-              if (data.length == 7 && "CATERIN".equals(new String(data, StandardCharsets.UTF_8))) {
+      for (int ii = 0; ii < 3; ii++) {
+        int type = (ii + tryFirst) % 3;
+        System.out.println("sync() type = " + type);
+        switch (type) {
+        case 0:
+          protocol = Protocol.STKV1;
+          if (jPort.open(this)) {
+            // Toggle DTR to RESET Arduino
+            jPort.setDTR(false);
+            Thread.sleep(100);
+            jPort.setDTR(true);
+            for (int retry = 0; retry < 5; retry++) {
+              if (sendCmd(new byte[]{0x30, 0x20}, 0) != null) {
                 if (firstTime || type != tryFirst) {
-                  appendText("Caterina-based Bootloader detected\n");
+                  appendText("STKV1-based Bootloader detected\n");
                   firstTime = false;
                 }
-                tryFirst = 1;
+                tryFirst = 0;
                 return true;
               }
-              jPort.close();
             }
-            break;
-          case 2:
-            protocol = Protocol.STKV2;
-            if (jPort.open(this)) {
-              // Toggle DTR to RESET Arduino
-              jPort.setDTR(false);
-              Thread.sleep(100);
-              jPort.setDTR(true);
-              for (int retry = 0; retry < 5; retry++) {
-                byte[] rsp = sendCmd(new byte[]{0x01}, 8);
-                if (rsp != null) {
-                  //System.out.println(new String(rsp, StandardCharsets.US_ASCII));
-                  if (firstTime || type != tryFirst) {
-                    appendText("STKV2-based Bootloader detected\n");
-                    firstTime = false;
-                  }
-                  tryFirst = 2;
-                  return true;
-                }
-              }
-              jPort.close();
-            }
-            break;
+            jPort.close();
           }
+          break;
+        case 1:
+          protocol = Protocol.CATERINA;
+          jPort.touch1200();
+          if (jPort.open(this)) {
+            byte[] data = sendCmd(new byte[]{'S'}, 7);
+            // Note: bootloader only returns first 7 bytes of name
+            if (data.length == 7 && "CATERIN".equals(new String(data, StandardCharsets.UTF_8))) {
+              if (firstTime || type != tryFirst) {
+                appendText("Caterina-based Bootloader detected\n");
+                firstTime = false;
+              }
+              tryFirst = 1;
+              return true;
+            }
+            jPort.close();
+          }
+          break;
+        case 2:
+          protocol = Protocol.STKV2;
+          if (jPort.open(this)) {
+            // Toggle DTR to RESET Arduino
+            jPort.setDTR(false);
+            Thread.sleep(100);
+            jPort.setDTR(true);
+            for (int retry = 0; retry < 5; retry++) {
+              byte[] rsp = sendCmd(new byte[]{0x01}, 8);
+              if (rsp != null) {
+                //System.out.println(new String(rsp, StandardCharsets.US_ASCII));
+                if (firstTime || type != tryFirst) {
+                  appendText("STKV2-based Bootloader detected\n");
+                  firstTime = false;
+                }
+                tryFirst = 2;
+                return true;
+              }
+            }
+            jPort.close();
+          }
+          break;
         }
-      } catch (SerialPortException ex) {
-        throw new IllegalStateException("Unable to Open Serial Port");
       }
       jPort.close();
       return false;
