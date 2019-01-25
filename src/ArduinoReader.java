@@ -1,6 +1,4 @@
 
-import jssc.SerialPortException;
-
 import java.awt.*;
 import java.awt.event.*;
 
@@ -31,14 +29,13 @@ public class ArduinoReader extends JFrame {
 
   static class MCU {
     String  name;
-    int     flashSize, shift, base;
+    int     flashSize, base;
     char    fuse;
 
-    MCU (String name, int flashSize, char fuse, int shift, int base) {
+    MCU (String name, int flashSize, char fuse, int base) {
       this.name = name;
       this.flashSize = flashSize;
       this.fuse = fuse;
-      this.shift = shift;
       this.base = base;
     }
 
@@ -76,22 +73,22 @@ public class ArduinoReader extends JFrame {
     } else {
       tFont = new Font("Courier", Font.PLAIN, 12);
     }
-    // STK500V1-based Arduino Microcontrollers                              Flash  Boot (words)
-    devices.put("1E930A", new MCU("ATmega88A",   0x02000, 'E', 1, 128));   // 8K,   1K
-    devices.put("1E930F", new MCU("ATmega88PA",  0x02000, 'E', 1, 128));   // 8K,   1K
-    devices.put("1E9406", new MCU("ATmega168A",  0x04000, 'E', 1, 256));   // 16K,  1K
-    devices.put("1E940B", new MCU("ATmega168PA", 0x04000, 'E', 1, 256));   // 16K,  1K
-    devices.put("1E9514", new MCU("ATmega328",   0x08000, 'H', 1, 256));   // 32K,  2K
-    devices.put("1E950F", new MCU("ATmega328P",  0x08000, 'H', 1, 256));   // 32K,  2K
+    // STK500V1-based Arduino Microcontrollers                           Flash  Boot (words)
+    devices.put("1E930A", new MCU("ATmega88A",   0x02000, 'E', 128));   // 8K,   1K
+    devices.put("1E930F", new MCU("ATmega88PA",  0x02000, 'E', 128));   // 8K,   1K
+    devices.put("1E9406", new MCU("ATmega168A",  0x04000, 'E', 256));   // 16K,  1K
+    devices.put("1E940B", new MCU("ATmega168PA", 0x04000, 'E', 256));   // 16K,  1K
+    devices.put("1E9514", new MCU("ATmega328",   0x08000, 'H', 256));   // 32K,  2K
+    devices.put("1E950F", new MCU("ATmega328P",  0x08000, 'H', 256));   // 32K,  2K
     // Caterina-based Arduino Microcontrollers
-    devices.put("1E9488", new MCU("ATmega16U4",  0x10000, 'H', 1, 256));   // 64K,  2K
-    devices.put("1E9587", new MCU("ATmega32U4",  0x08000, 'H', 1, 256));   // 32K,  2K
+    devices.put("1E9488", new MCU("ATmega16U4",  0x10000, 'H', 256));   // 64K,  2K
+    devices.put("1E9587", new MCU("ATmega32U4",  0x08000, 'H', 256));   // 32K,  2K
     // STK500V2-based Arduino Microcontrollers
-    devices.put("1E9608", new MCU("ATmega640",   0x10000, 'H', 1, 512));   // 64K,  4K
-    devices.put("1E9703", new MCU("ATmega1280",  0x20000, 'H', 1, 512));   // 128K, 4K
-    devices.put("1E9704", new MCU("ATmega1281",  0x20000, 'H', 1, 512));   // 128K, 4K
-    devices.put("1E9801", new MCU("ATmega2560",  0x40000, 'H', 1, 512));   // 256K, 4K
-    devices.put("1E9802", new MCU("ATmega2561",  0x40000, 'H', 1, 512));   // 256K, 4K
+    devices.put("1E9608", new MCU("ATmega640",   0x10000, 'H', 512));   // 64K,  4K
+    devices.put("1E9703", new MCU("ATmega1280",  0x20000, 'H', 512));   // 128K, 4K
+    devices.put("1E9704", new MCU("ATmega1281",  0x20000, 'H', 512));   // 128K, 4K
+    devices.put("1E9801", new MCU("ATmega2560",  0x40000, 'H', 512));   // 256K, 4K
+    devices.put("1E9802", new MCU("ATmega2561",  0x40000, 'H', 512));   // 256K, 4K
   }
 
   /*
