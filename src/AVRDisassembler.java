@@ -193,7 +193,7 @@ public class AVRDisassembler {
 
   // Print functions that track cursor position (to support tabbing)
 
-  void printCmd () {
+  private void printCmd () {
     print(":");
     tabTo(8);
   }
@@ -308,7 +308,7 @@ public class AVRDisassembler {
       case 0x9509: print("icall");   return true;
       case 0x9518: print("reti");    return true;
       case 0x9519: print("eicall");  return true;
-      case 0x9588: print("sleep");    return true;
+      case 0x9588: print("sleep");   return true;
       case 0x9598: print("break");   return true;
       case 0x95A8: print("wdr");     return true;
       case 0x95C8: print("lpm");     return true;
@@ -511,7 +511,7 @@ public class AVRDisassembler {
     return false;
   }
 
-  public String getDisAsm () {
+  String getDisAsm () {
     return new String(bout.toByteArray(), StandardCharsets.UTF_8);
   }
 
@@ -519,54 +519,41 @@ public class AVRDisassembler {
    *  Test Code for Disassembler
    */
 
-  static class IntelHex {
-    int     base;
-    byte[]  code;
-  }
-
-  private static IntelHex loadIntelHex (String file) throws Exception {
-    InputStream fis;
-    if (file.startsWith("res:")) {
-      fis = AVRDisassembler.class.getResourceAsStream(file.substring(4));
-    } else {
-      fis = new FileInputStream(file);
-    }
-    byte[] data = new byte[fis.available()];
-    fis.read(data);
-    fis.close();
-    String hex = new String(data, "UTF8");
-    boolean needAddr = true;
-    IntelHex iHex = new IntelHex();
+  public static void main (String[] args) throws Exception {
     ByteArrayOutputStream buf = new ByteArrayOutputStream();
-    StringTokenizer tok = new StringTokenizer(hex, "\n\r");
-    while (tok.hasMoreTokens()) {
-      String line = tok.nextToken();
-      if (line.startsWith(":")) {
-        if (needAddr) {
-          String add = line.substring(3, 7);
-          iHex.base = Integer.parseInt(add, 16);
-          needAddr = false;
-        }
-        String type = line.substring(7, 9);
-        line = line.substring(9, line.length() - 2);
-        if (type.equals("00")) {
-          int len = line.length();
-          for (int ii = 0; ii < len; ii += 2) {
-            String bHex = line.substring(ii, ii + 2);
-            byte tmp = (byte) Integer.parseInt(bHex, 16);
-            buf.write(tmp);
+    int base = 0;
+    InputStream fis;
+    fis = AVRDisassembler.class.getResourceAsStream("optiboot_atmega328.hex");
+    byte[] data = new byte[fis.available()];
+    if (fis.read(data) == data.length) {
+      fis.close();
+      String hex = new String(data, StandardCharsets.UTF_8);
+      boolean needAddr = true;
+      StringTokenizer tok = new StringTokenizer(hex, "\n\r");
+      while (tok.hasMoreTokens()) {
+        String line = tok.nextToken();
+        if (line.startsWith(":")) {
+          if (needAddr) {
+            String add = line.substring(3, 7);
+            base = Integer.parseInt(add, 16);
+            needAddr = false;
+          }
+          String type = line.substring(7, 9);
+          line = line.substring(9, line.length() - 2);
+          if (type.equals("00")) {
+            int len = line.length();
+            for (int ii = 0; ii < len; ii += 2) {
+              String bHex = line.substring(ii, ii + 2);
+              byte tmp = (byte) Integer.parseInt(bHex, 16);
+              buf.write(tmp);
+            }
           }
         }
       }
+      byte[] code = buf.toByteArray();
+      AVRDisassembler disAsm = new AVRDisassembler();
+      disAsm.dAsm(code, 0, base, code.length / 2);
+      System.out.println(disAsm.getDisAsm());
     }
-    iHex.code = buf.toByteArray();
-    return iHex;
-  }
-
-    public static void main (String[] args) throws Exception {
-    IntelHex iHex = loadIntelHex("res:optiboot_atmega328.hex");
-    AVRDisassembler disAsm = new AVRDisassembler();
-    disAsm.dAsm(iHex.code, 0, iHex.base, iHex.code.length / 2);
-    System.out.println(disAsm.getDisAsm());
   }
 }
