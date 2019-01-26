@@ -228,7 +228,7 @@ public class ArduinoReader extends JFrame {
     private byte                checksum, sendSeq;
     private volatile int        state, timeout;
     private volatile Protocol   protocol;
-    private int[]               baudRates = {115200, 57600, 19200};
+    private int[]               baudRates = {115200, 57600, 19200, 14400, 7200};
 
     ArduinoBootDriver (JSSCPort jPort) {
       this.jPort = jPort;
@@ -263,11 +263,12 @@ public class ArduinoReader extends JFrame {
               jPort.setDTR(false);
               Thread.sleep(100);
               jPort.setDTR(true);
-              for (int retry = 0; retry < 5; retry++) {
+              for (int retry = 0; retry < 3; retry++) {
                 appendText(".");
                 if (sendCmd(new byte[]{0x30, 0x20}, 0) != null) {
                   if (firstTime || type != tryFirst) {
                     appendText("\nSTKV1-based Bootloader detected at " + baudRate +" baud\n");
+                    jPort.setBaudRate(baudRate);
                     firstTime = false;
                   }
                   tryFirst = 0;
@@ -280,20 +281,22 @@ public class ArduinoReader extends JFrame {
           break;
         case 1:
           protocol = Protocol.CATERINA;
-          jPort.touch1200();
-          if (jPort.open(this)) {
+          for (int retry =0; retry < 3; retry++) {
             appendText(".");
-            byte[] data = sendCmd(new byte[]{'S'}, 7);
-            // Note: bootloader only returns first 7 bytes of name
-            if (data.length == 7 && "CATERIN".equals(new String(data, StandardCharsets.UTF_8))) {
-              if (firstTime || type != tryFirst) {
-                appendText("\nCaterina-based Bootloader detected\n");
-                firstTime = false;
+            jPort.touch1200();
+            if (jPort.open(this)) {
+              byte[] data = sendCmd(new byte[]{'S'}, 7);
+              // Note: bootloader only returns first 7 bytes of name
+              if (data.length == 7 && "CATERIN".equals(new String(data, StandardCharsets.UTF_8))) {
+                if (firstTime || type != tryFirst) {
+                  appendText("\nCaterina-based Bootloader detected\n");
+                  firstTime = false;
+                }
+                tryFirst = 1;
+                return true;
               }
-              tryFirst = 1;
-              return true;
+              jPort.close();
             }
-            jPort.close();
           }
           break;
         case 2:
@@ -303,7 +306,7 @@ public class ArduinoReader extends JFrame {
             jPort.setDTR(false);
             Thread.sleep(100);
             jPort.setDTR(true);
-            for (int retry = 0; retry < 5; retry++) {
+            for (int retry = 0; retry < 3; retry++) {
               appendText(".");
               byte[] rsp = sendCmd(new byte[]{0x01}, 8);
               if (rsp != null) {

@@ -121,6 +121,10 @@ public class JSSCPort implements SerialPortEventListener {
     return baudRate;
   }
 
+  public void setBaudRate (int baudRate) {
+    this.baudRate = baudRate;
+  }
+
   public boolean open (RXEvent handler) throws SerialPortException {
     return open(handler, this.baudRate);
   }
