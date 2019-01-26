@@ -4,8 +4,10 @@ import java.awt.event.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 import java.util.prefs.Preferences;
 import javax.swing.*;
 import javax.swing.text.Document;
@@ -220,15 +222,28 @@ public class ArduinoReader extends JFrame {
   }
 
   class ArduinoBootDriver implements JSSCPort.RXEvent {
-    private JSSCPort          jPort;
-    ByteArrayOutputStream     bout = new ByteArrayOutputStream();
-    private int               len;
-    private byte              checksum, sendSeq;
-    private volatile int      state, timeout;
-    private volatile Protocol  protocol;
+    private JSSCPort            jPort;
+    ByteArrayOutputStream       bout = new ByteArrayOutputStream();
+    private int                 len;
+    private byte                checksum, sendSeq;
+    private volatile int        state, timeout;
+    private volatile Protocol   protocol;
+    private int[]               baudRates = {115200, 57600, 19200};
 
     ArduinoBootDriver (JSSCPort jPort) {
       this.jPort = jPort;
+    }
+
+    private List<Integer> getBaudRates () {
+      List<Integer> rates = new ArrayList<>();
+      int preferredRate = jPort.getBaudRate();
+      rates.add(preferredRate);
+      for (int rate : baudRates) {
+        if (rate != preferredRate) {
+          rates.add(rate);
+        }
+      }
+      return rates;
     }
 
     private void close () {
@@ -236,39 +251,43 @@ public class ArduinoReader extends JFrame {
     }
 
     boolean sync () throws Exception {
+      appendText("syncing");
       for (int ii = 0; ii < 3; ii++) {
         int type = (ii + tryFirst) % 3;
-        System.out.println("sync() type = " + type);
         switch (type) {
         case 0:
           protocol = Protocol.STKV1;
-          if (jPort.open(this)) {
-            // Toggle DTR to RESET Arduino
-            jPort.setDTR(false);
-            Thread.sleep(100);
-            jPort.setDTR(true);
-            for (int retry = 0; retry < 5; retry++) {
-              if (sendCmd(new byte[]{0x30, 0x20}, 0) != null) {
-                if (firstTime || type != tryFirst) {
-                  appendText("STKV1-based Bootloader detected\n");
-                  firstTime = false;
+          for (int baudRate : getBaudRates()) {
+            if (jPort.open(this, baudRate)) {
+              // Toggle DTR to RESET Arduino
+              jPort.setDTR(false);
+              Thread.sleep(100);
+              jPort.setDTR(true);
+              for (int retry = 0; retry < 5; retry++) {
+                appendText(".");
+                if (sendCmd(new byte[]{0x30, 0x20}, 0) != null) {
+                  if (firstTime || type != tryFirst) {
+                    appendText("\nSTKV1-based Bootloader detected at " + baudRate +" baud\n");
+                    firstTime = false;
+                  }
+                  tryFirst = 0;
+                  return true;
                 }
-                tryFirst = 0;
-                return true;
               }
+              jPort.close();
             }
-            jPort.close();
           }
           break;
         case 1:
           protocol = Protocol.CATERINA;
           jPort.touch1200();
           if (jPort.open(this)) {
+            appendText(".");
             byte[] data = sendCmd(new byte[]{'S'}, 7);
             // Note: bootloader only returns first 7 bytes of name
             if (data.length == 7 && "CATERIN".equals(new String(data, StandardCharsets.UTF_8))) {
               if (firstTime || type != tryFirst) {
-                appendText("Caterina-based Bootloader detected\n");
+                appendText("\nCaterina-based Bootloader detected\n");
                 firstTime = false;
               }
               tryFirst = 1;
@@ -285,11 +304,12 @@ public class ArduinoReader extends JFrame {
             Thread.sleep(100);
             jPort.setDTR(true);
             for (int retry = 0; retry < 5; retry++) {
+              appendText(".");
               byte[] rsp = sendCmd(new byte[]{0x01}, 8);
               if (rsp != null) {
                 //System.out.println(new String(rsp, StandardCharsets.US_ASCII));
                 if (firstTime || type != tryFirst) {
-                  appendText("STKV2-based Bootloader detected\n");
+                  appendText("\nSTKV2-based Bootloader detected\n");
                   firstTime = false;
                 }
                 tryFirst = 2;
@@ -302,6 +322,7 @@ public class ArduinoReader extends JFrame {
         }
       }
       jPort.close();
+      appendText("\n");
       return false;
     }
 

@@ -16,6 +16,10 @@ ArduinoReader uses Java Simple Serial Connector 2.8.0 to talk to the various Ard
 
 Then, you can use the **Actions** menu to read the BootLoader's version number, the MCU's signature and fuse bytes (not supported by all BootLoaders) as well as read out the first 1024 bytes of Flash Memory, or the section of Memory that can contain the BootLoader.  Ideally, ArduinoReader tries to interpret the fuse bits to detemine the exact potion of Flash Memory used by the BootLoader, but this is not possible for BootLoaders that do not implement a way to read the fuses, such as Optiboot.  In these cases, ArduinoReader will try skipping over unprogrammed Flash Memory bytes (`0xFF`) to determine the base of the BootLoader.  Or, as a fallback, it will dump the entire range of Flash that could contain a BootLoader.  _There is also a command to display a disassembly of the BootLoader code, but this feature is still under development and some aspects of the disassembly may be incorrect._
 
+### Vanishing Serial Ports on MacOs
+
+I'm not sure if this problem is caused by JSSC, or MacOs but, from time to time, a USB serial device, such as an Arduino Board will stop showing up in the Ports menu.  When this happens, the only cure I've found is to shutdown and restart the Mac, at which point the vanished ports should reappear.  If you know anything about this phenomenon and how to fix it, please provide details in the "Issues" section of this project.
+
 ### On the "To Do" List
 
   + Add an interface to allow mannual selection of a range of Flash Memory to dump to the sceen.
