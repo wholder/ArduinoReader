@@ -47,6 +47,7 @@ public class JSSCPort implements SerialPortEventListener {
     baudRates.put("1200",   SerialPort.BAUDRATE_1200);
     baudRates.put("2400",   2400);    // Note: constant missing in JSSC
     baudRates.put("4800",   SerialPort.BAUDRATE_4800);
+    baudRates.put("7200",   7200);    // For misconfigured Arduino
     baudRates.put("9600",   SerialPort.BAUDRATE_9600);
     baudRates.put("14400",  SerialPort.BAUDRATE_14400);
     baudRates.put("19200",  SerialPort.BAUDRATE_19200);
