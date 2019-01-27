@@ -24,7 +24,6 @@ I'm not sure if this problem is caused by JSSC, or MacOs but, from time to time,
 
   + Add an interface to allow manual selection of a range of Flash Memory to dump to the sceen.
   + Add an option to save a range to Flash Memory to an Intel Hex file.
-  + Add an option to checksum the program area of Flash Memory and print it to the display.
   
 ### Credit and Thanks
 
