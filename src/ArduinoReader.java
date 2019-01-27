@@ -721,7 +721,7 @@ public class ArduinoReader extends JFrame {
               appendText(" Unable to read device signature\n");
             }
           } else {
-            appendText("Unable to Sync Bootloader\n");
+            appendText("Unable to Engage Bootloader\n");
           }
         } catch (Unsupported ex) {
           appendText(ex.message + "\n");
@@ -749,7 +749,7 @@ public class ArduinoReader extends JFrame {
               appendText("Unable to read Fuses\n");
             }
           } else {
-            appendText("Unable to Sync Bootloader\n");
+            appendText("Unable to Engage Bootloader\n");
           }
         } catch (Unsupported ex) {
           appendText(ex.message + "\n");
@@ -803,9 +803,13 @@ public class ArduinoReader extends JFrame {
                   appendText("Read Error\n");
                 }
               } else {
-                appendText("Unable to Sync Bootloader\n");
+                appendText("Unknown device signature\n");
               }
+            } else {
+              appendText("Unable to read device signature\n");
             }
+          } else {
+            appendText("Unable to Engage Bootloader\n");
           }
         } catch (Unsupported ex) {
           appendText(ex.message + "\n");
@@ -892,7 +896,7 @@ public class ArduinoReader extends JFrame {
               appendText("Unable to read device signature\n");
             }
           } else {
-            appendText("Unable to Sync Bootloader\n");
+            appendText("Unable to Engage Bootloader\n");
           }
         } catch (Unsupported ex) {
           appendText(ex.message + "\n");
@@ -954,7 +958,7 @@ public class ArduinoReader extends JFrame {
               appendText("Unable to read device signature\n");
             }
           } else {
-            appendText("Unable to Sync Bootloader\n");
+            appendText("Unable to Engage Bootloader\n");
           }
         } catch (Unsupported ex) {
           appendText(ex.message + "\n");
