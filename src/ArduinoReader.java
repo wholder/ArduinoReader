@@ -101,9 +101,6 @@ public class ArduinoReader extends JFrame {
    *    https://www.instructables.com/id/Overview-the-Arduino-sketch-uploading-process-and-/
    *    https://github.com/arduino/Arduino-stk500v2-bootloader/blob/master/command.h
    *
-   *  To Do:
-   *    1. Implement STV500v2 Protocol to talk to Mega2560 Board (256K Flash not addressable with v1)
-   *
    *  Baud Rates:
    *    UNO = 115200
    *    Duemilanove, Nano = 57600
