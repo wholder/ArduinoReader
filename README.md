@@ -14,7 +14,7 @@ I suggest using Java 8 JRE or JDK, or later for ArduinoReader, but the code also
 
 ArduinoReader uses Java Simple Serial Connector 2.8.0 to talk to the various Arduno Boards.  The code tries to automate the process of detecting which protocol is needed to talk to a give Arduino Boards but, currently you first need to use the **Settings** menu to select a port and baud rate.  Most recent Arduinos use a baud rate of 115200, but you may need to select 57600, or lower to talk to older boards.
 
-Then, you can use the **Actions** menu to read the BootLoader's version number, the MCU's signature and fuse bytes (not supported by all BootLoaders) as well as read out the first 1024 bytes of Flash Memory, or the section of Memory that can contain the BootLoader.  Ideally, ArduinoReader tries to interpret the fuse bits to detemine the exact potion of Flash Memory used by the BootLoader, but this is not possible for BootLoaders that do not implement a way to read the fuses, such as Optiboot.  In these cases, ArduinoReader will try skipping over unprogrammed Flash Memory bytes (`0xFF`) to determine the base of the BootLoader.  Or, as a fallback, it will dump the entire range of Flash that could contain a BootLoader.  _There is also a command to display a disassembly of the BootLoader code, but this feature is still under development and some aspects of the disassembly may be incorrect._
+Then, you can use the **Actions** menu to read the BootLoader's version number, the MCU's signature and fuse bytes (not supported by all BootLoaders) as well as read out the Application area of Flash Memory (prints until it detects 16 `0xFF` bytes in a row), or the section of Memory that can contain the BootLoader.  Ideally, ArduinoReader tries to interpret the fuse bits to determine the exact potion of Flash Memory used by the BootLoader, but this is not possible for BootLoaders that do not implement a way to read the fuses, such as Optiboot.  In these cases, ArduinoReader will try skipping over unprogrammed Flash Memory bytes (`0xFF`) to determine the base of the BootLoader.  Or, as a fallback, it will dump the entire range of Flash that could contain a BootLoader.  _There is also a command to display a disassembly of the BootLoader code, but this feature is still under development and some aspects of the disassembly may be incorrect._
 
 ### Vanishing Serial Ports on MacOs
 
@@ -22,10 +22,9 @@ I'm not sure if this problem is caused by JSSC, or MacOs but, from time to time,
 
 ### On the "To Do" List
 
-  + Add an interface to allow mannual selection of a range of Flash Memory to dump to the sceen.
+  + Add an interface to allow manual selection of a range of Flash Memory to dump to the sceen.
   + Add an option to save a range to Flash Memory to an Intel Hex file.
   + Add an option to checksum the program area of Flash Memory and print it to the display.
-  + Add an AVR disassembler to display disassembled BootLoader code. (added, but still Beta)
   
 ### Credit and Thanks
 
@@ -33,6 +32,7 @@ This project would have been much harder to write without help from the followin
 
 - [Java Simple Serial Connector 2.8.0](https://github.com/scream3r/java-simple-serial-connector) - JSSC is used to communicate with the Arduino-based programmer
 - [IntelliJ IDEA from JetBrains](https://www.jetbrains.com/idea/) (my favorite development environment for Java coding. Thanks JetBrains!)
+- Bill Westfield or his help explaining the nuances of bootloaders and Optiboot.
 
 ### MIT License
 

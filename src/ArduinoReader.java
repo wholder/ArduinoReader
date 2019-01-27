@@ -270,6 +270,8 @@ public class ArduinoReader extends JFrame {
                     appendText("\nSTKV1-based Bootloader detected at " + baudRate +" baud\n");
                     jPort.setBaudRate(baudRate);
                     firstTime = false;
+                  } else {
+                    appendText("\n");
                   }
                   tryFirst = 0;
                   return true;
@@ -291,6 +293,8 @@ public class ArduinoReader extends JFrame {
                 if (firstTime || type != tryFirst) {
                   appendText("\nCaterina-based Bootloader detected\n");
                   firstTime = false;
+                } else {
+                  appendText("\n");
                 }
                 tryFirst = 1;
                 return true;
@@ -314,6 +318,8 @@ public class ArduinoReader extends JFrame {
                 if (firstTime || type != tryFirst) {
                   appendText("\nSTKV2-based Bootloader detected\n");
                   firstTime = false;
+                } else {
+                  appendText("\n");
                 }
                 tryFirst = 2;
                 return true;
@@ -765,20 +771,41 @@ public class ArduinoReader extends JFrame {
         try {
           actions.setEnabled(false);
           if (send.sync()) {
-            byte[] data = send.readFlash(0, 1024);
+            byte[] data = send.getSignature();
             if (data != null) {
-              for (int ii = 0; ii < data.length; ii++) {
-                if (ii % 32 == 0) {
-                  appendText(toHex((byte) (ii >> 8)) + toHex((byte) (ii & 0xFF)) + ": ");
+              MCU device = devices.get(toHex(data[0]) + toHex(data[1]) + toHex(data[2]));
+              if (device != null) {
+                int flashSize = device.flashSize;
+                data = send.readFlash(0, flashSize);
+                if (data != null) {
+                  boolean endOfCode = true;
+                  StringBuilder buf = new StringBuilder();
+                  for (int ii = 0; ii < data.length; ii++) {
+                    if (ii % 32 == 0) {
+                      buf.append(toHex((byte) (ii >> 8)) + toHex((byte) (ii & 0xFF)) + ": ");
+                      endOfCode = true;
+                    }
+                    if ((data[ii] & 0xFF) != 0xFF) {
+                      endOfCode = false;
+                    }
+                    buf.append(toHex(data[ii]));
+                    if (ii % 32 == 31) {
+                      if (endOfCode) {
+                        break;
+                      }
+                      buf.append("\n");
+                      appendText(buf.toString());
+                    } else {
+                      buf.append(" ");
+                    }
+                  }
+                } else {
+                  appendText("Read Error\n");
                 }
-                appendText(toHex(data[ii]));
-                appendText((ii % 32 == 31 ? "\n" : " "));
+              } else {
+                appendText("Unable to Sync Bootloader\n");
               }
-            } else {
-              appendText("Read Error\n");
             }
-          } else {
-            appendText("Unable to Sync Bootloader\n");
           }
         } catch (Unsupported ex) {
           appendText(ex.message + "\n");
