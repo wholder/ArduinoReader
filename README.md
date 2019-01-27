@@ -32,7 +32,7 @@ This project would have been much harder to write without help from the followin
 
 - [Java Simple Serial Connector 2.8.0](https://github.com/scream3r/java-simple-serial-connector) - JSSC is used to communicate with the Arduino-based programmer
 - [IntelliJ IDEA from JetBrains](https://www.jetbrains.com/idea/) (my favorite development environment for Java coding. Thanks JetBrains!)
-- Bill Westfield or his help explaining the nuances of bootloaders and Optiboot.
+- Bill Westfield for his help explaining the nuances of bootloaders and Optiboot.
 
 ### MIT License
 
