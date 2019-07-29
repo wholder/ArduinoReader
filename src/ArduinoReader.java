@@ -664,7 +664,7 @@ public class ArduinoReader extends JFrame {
     text.setContentType("text/plain");
     text.setEditable(false);
     JScrollPane scroll = new JScrollPane(text);
-    add("Center", scroll);
+    add(scroll, BorderLayout.CENTER);
     appendText("Ready\n");
     // Add menu bar and menus
     JMenuBar menuBar = new JMenuBar();
